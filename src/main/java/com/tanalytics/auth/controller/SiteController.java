@@ -48,6 +48,13 @@ public class SiteController {
         return ResponseEntity.status(HttpStatus.CREATED).body(siteService.createSite(request, userId));
     }
 
+    @PostMapping("/{siteId}/api-key/rotate")
+    @PreAuthorize("@siteAuth.hasAccess(#siteId, 'ADMIN', authentication)")
+    @Operation(summary = "Rotate site API key (admin only)")
+    public ResponseEntity<SiteResponse> rotateApiKey(@PathVariable UUID siteId) {
+        return ResponseEntity.ok(siteService.rotateApiKey(siteId));
+    }
+
     // ---- Settings ----
 
     @GetMapping("/{siteId}/settings")

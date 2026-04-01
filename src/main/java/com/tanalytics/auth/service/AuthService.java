@@ -27,6 +27,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final SiteRepository siteRepository;
     private final JwtService jwtService;
+        private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
@@ -34,12 +35,14 @@ public class AuthService {
             UserRepository userRepository,
             SiteRepository siteRepository,
             JwtService jwtService,
+                        RefreshTokenService refreshTokenService,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager
     ) {
         this.userRepository = userRepository;
         this.siteRepository = siteRepository;
         this.jwtService = jwtService;
+                this.refreshTokenService = refreshTokenService;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
     }
@@ -65,7 +68,7 @@ public class AuthService {
 
     // ---- Login ----
 
-    @Transactional(readOnly = true)
+        @Transactional
     public TokenResponse login(LoginRequest request) {
         // Delegate credential check to Spring Security
         authenticationManager.authenticate(
@@ -81,19 +84,16 @@ public class AuthService {
         String accessToken = jwtService.generateAccessToken(
                 user.getId(), user.getEmail(), user.getRole(), siteIds);
         String refreshToken = jwtService.generateRefreshToken(user.getId());
+        refreshTokenService.persistRefreshToken(user, refreshToken);
 
         return new TokenResponse(accessToken, refreshToken, jwtService.getAccessExpirySeconds());
     }
 
     // ---- Refresh token ----
 
-    @Transactional(readOnly = true)
+        @Transactional
     public TokenResponse refresh(String refreshToken) {
-        if (!jwtService.isTokenValid(refreshToken)) {
-            throw new IllegalArgumentException("Invalid or expired refresh token");
-        }
-
-        UUID userId = jwtService.extractUserId(refreshToken);
+                UUID userId = refreshTokenService.consumeRefreshToken(refreshToken);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalStateException("User not found: " + userId));
 
@@ -103,6 +103,7 @@ public class AuthService {
         String newAccess  = jwtService.generateAccessToken(
                 user.getId(), user.getEmail(), user.getRole(), siteIds);
         String newRefresh = jwtService.generateRefreshToken(user.getId());
+        refreshTokenService.persistRefreshToken(user, newRefresh);
 
         return new TokenResponse(newAccess, newRefresh, jwtService.getAccessExpirySeconds());
     }

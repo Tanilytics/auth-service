@@ -1,5 +1,6 @@
 package com.tanalytics.auth.controller;
 
+import com.tanalytics.auth.service.RefreshTokenAuthException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -39,6 +40,13 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleBadCredentials(BadCredentialsException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         pd.setType(URI.create("urn:tanalytics:unauthorized"));
+        return pd;
+    }
+
+    @ExceptionHandler(RefreshTokenAuthException.class)
+    public ProblemDetail handleRefreshTokenAuth(RefreshTokenAuthException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        pd.setType(URI.create("urn:tanalytics:refresh-token-unauthorized"));
         return pd;
     }
 

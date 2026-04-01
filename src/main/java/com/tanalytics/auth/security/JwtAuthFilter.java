@@ -39,6 +39,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
+        if (request.getRequestURI().startsWith("/internal/")) {
+            handleInternalRequest(request, response, filterChain);
+            return;
+        }
+
         String header = request.getHeader("Authorization");
         if (!StringUtils.hasText(header) || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -58,6 +63,34 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
+        filterChain.doFilter(request, response);
+    }
+
+    private void handleInternalRequest(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws IOException, ServletException {
+        String header = request.getHeader("Authorization");
+        if (!StringUtils.hasText(header) || !header.startsWith("Bearer ")) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing internal service token");
+            return;
+        }
+
+        String token = header.substring(7);
+        if (!jwtService.isTokenValid(token) || !jwtService.isServiceTokenForInternalAudience(token)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid internal service token");
+            return;
+        }
+
+        String serviceName = jwtService.extractServiceName(token);
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                        serviceName,
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE"))
+                );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);
     }
 }

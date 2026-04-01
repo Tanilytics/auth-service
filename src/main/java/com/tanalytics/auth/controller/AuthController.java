@@ -1,6 +1,7 @@
 package com.tanalytics.auth.controller;
 
 import com.tanalytics.auth.model.dto.LoginRequest;
+import com.tanalytics.auth.model.dto.RefreshTokenRequest;
 import com.tanalytics.auth.model.dto.RegisterRequest;
 import com.tanalytics.auth.model.dto.TokenResponse;
 import com.tanalytics.auth.model.dto.UserResponse;
@@ -37,8 +38,8 @@ public class AuthController {
 
     @PostMapping("/refresh")
     @Operation(summary = "Exchange a refresh token for new access + refresh tokens")
-    public ResponseEntity<TokenResponse> refresh(@RequestParam String refreshToken) {
-        return ResponseEntity.ok(authService.refresh(refreshToken));
+    public ResponseEntity<TokenResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refresh(request.refreshToken()));
     }
 }
 

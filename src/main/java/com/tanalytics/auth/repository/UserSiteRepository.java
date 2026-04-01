@@ -19,9 +19,5 @@ public interface UserSiteRepository extends JpaRepository<UserSite, UserSite.Use
     List<UserSite> findBySiteId(@Param("siteId") UUID siteId);
 
     Optional<UserSite> findByUserIdAndSiteId(UUID userId, UUID siteId);
-
-    default Optional<UserSite> findByUserIdAndSiteId(UUID userId, UUID siteId, UserSiteRepository repo) {
-        return repo.findById(new UserSite.UserSiteId(userId, siteId));
-    }
 }
 

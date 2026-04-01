@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.Collection;
 import java.util.UUID;
 
 /**
@@ -25,15 +25,18 @@ public class JwtService {
     private final SecretKey signingKey;
     private final long accessExpirySeconds;
     private final long refreshExpirySeconds;
+    private final String internalAudience;
 
     public JwtService(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-token-expiry-seconds:3600}") long accessExpirySeconds,
-            @Value("${jwt.refresh-token-expiry-seconds:604800}") long refreshExpirySeconds
+            @Value("${jwt.refresh-token-expiry-seconds:604800}") long refreshExpirySeconds,
+            @Value("${jwt.internal-audience:auth-internal}") String internalAudience
     ) {
         this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessExpirySeconds = accessExpirySeconds;
         this.refreshExpirySeconds = refreshExpirySeconds;
+        this.internalAudience = internalAudience;
     }
 
     // ---- Token issuance ----
@@ -62,6 +65,18 @@ public class JwtService {
                 .compact();
     }
 
+    public String generateServiceToken(String serviceName) {
+        return Jwts.builder()
+                .subject(serviceName)
+                .claim("type", "service")
+                .claim("service", serviceName)
+                .audience().add(internalAudience).and()
+                .issuedAt(new Date())
+                .expiration(Date.from(Instant.now().plusSeconds(accessExpirySeconds)))
+                .signWith(signingKey)
+                .compact();
+    }
+
     // ---- Token parsing ----
 
     public Claims parseToken(String token) {
@@ -76,8 +91,32 @@ public class JwtService {
         return UUID.fromString(parseToken(token).getSubject());
     }
 
+    public String extractServiceName(String token) {
+        Claims claims = parseToken(token);
+        String service = claims.get("service", String.class);
+        return service != null ? service : claims.getSubject();
+    }
+
+    public Instant extractExpiration(String token) {
+        return parseToken(token).getExpiration().toInstant();
+    }
+
     public boolean isAccessToken(String token) {
         return "access".equals(parseToken(token).get("type", String.class));
+    }
+
+    public boolean isRefreshToken(String token) {
+        return "refresh".equals(parseToken(token).get("type", String.class));
+    }
+
+    public boolean isServiceTokenForInternalAudience(String token) {
+        Claims claims = parseToken(token);
+        if (!"service".equals(claims.get("type", String.class))) {
+            return false;
+        }
+
+        Collection<String> audiences = claims.getAudience();
+        return audiences != null && audiences.contains(internalAudience);
     }
 
     public boolean isTokenValid(String token) {

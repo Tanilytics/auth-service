@@ -79,6 +79,26 @@ public class SiteService {
         return toResponse(site, plainKey);  // return plain key only on creation
     }
 
+        @Transactional
+        public SiteResponse rotateApiKey(UUID siteId) {
+                Site site = siteRepository.findById(siteId)
+                                .orElseThrow(() -> new IllegalArgumentException("Site not found: " + siteId));
+
+                String oldHash = site.getApiKeyHash();
+                String newPlainKey = apiKeyService.generateApiKey();
+                String newHash = apiKeyService.hashApiKey(newPlainKey);
+
+                site.setApiKey(newPlainKey);
+                site.setApiKeyHash(newHash);
+                site = siteRepository.save(site);
+
+                apiKeyService.evictApiKey(oldHash);
+                apiKeyService.cacheApiKey(site);
+
+                log.info("API key rotated for site={}", siteId);
+                return toResponse(site, newPlainKey);
+        }
+
     // ---- Get settings ----
 
     @Transactional(readOnly = true)
@@ -128,12 +148,13 @@ public class SiteService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + request.email()));
 
         UserSite.UserSiteId id = new UserSite.UserSiteId(user.getId(), siteId);
+        String normalizedRole = request.role().toLowerCase();
         UserSite membership = userSiteRepository.findById(id)
-                .orElseGet(() -> new UserSite(user, site, request.role()));
-        membership.setRole(request.role());
+                .orElseGet(() -> new UserSite(user, site, normalizedRole));
+        membership.setRole(normalizedRole);
         userSiteRepository.save(membership);
 
-        return Map.of("userId", user.getId(), "email", user.getEmail(), "role", request.role());
+        return Map.of("userId", user.getId(), "email", user.getEmail(), "role", normalizedRole);
     }
 
     // ---- Helpers ----
