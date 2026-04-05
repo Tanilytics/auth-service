@@ -47,7 +47,7 @@ public class SiteService {
     public List<SiteResponse> listSites(UUID userId) {
         return siteRepository.findAllByUserId(userId)
                 .stream()
-                .map(s -> toResponse(s, null))   // don't expose plain-text key in list
+                .map(s -> toResponse(s, null))
                 .toList();
     }
 
@@ -64,7 +64,6 @@ public class SiteService {
         Site site = new Site();
         site.setName(request.name());
         site.setDomain(request.domain());
-        site.setApiKey(plainKey);
         site.setApiKeyHash(keyHash);
         site = siteRepository.save(site);
 
@@ -88,7 +87,6 @@ public class SiteService {
                 String newPlainKey = apiKeyService.generateApiKey();
                 String newHash = apiKeyService.hashApiKey(newPlainKey);
 
-                site.setApiKey(newPlainKey);
                 site.setApiKeyHash(newHash);
                 site = siteRepository.save(site);
 

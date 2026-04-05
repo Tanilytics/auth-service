@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -48,5 +49,12 @@ public class InternalAuthController {
     ) {
         log.debug("Internal membership lookup by caller={} siteId={} userId={}", authentication.getName(), siteId, userId);
         return ResponseEntity.ok(internalAuthService.getMembership(siteId, userId));
+    }
+
+    @GetMapping("/sites/configs")
+    @Operation(summary = "List all site configs for trusted service callers")
+    public ResponseEntity<List<InternalSiteConfigResponse>> getAllSiteConfigs(Authentication authentication) {
+        log.debug("Internal site config list lookup by caller={}", authentication.getName());
+        return ResponseEntity.ok(internalAuthService.getAllSiteConfigs());
     }
 }

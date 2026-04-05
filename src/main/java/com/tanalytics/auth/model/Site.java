@@ -29,9 +29,6 @@ public class Site {
     @Column(nullable = false)
     private String domain;
 
-    @Column(name = "api_key", nullable = false, unique = true)
-    private String apiKey;
-
     @Column(name = "api_key_hash", nullable = false)
     private String apiKeyHash;
 
@@ -67,8 +64,6 @@ public class Site {
     public void setName(String name) { this.name = name; }
     public String getDomain() { return domain; }
     public void setDomain(String domain) { this.domain = domain; }
-    public String getApiKey() { return apiKey; }
-    public void setApiKey(String apiKey) { this.apiKey = apiKey; }
     public String getApiKeyHash() { return apiKeyHash; }
     public void setApiKeyHash(String apiKeyHash) { this.apiKeyHash = apiKeyHash; }
     public Map<String, Object> getSettings() { return settings; }

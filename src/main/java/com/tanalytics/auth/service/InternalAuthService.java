@@ -9,6 +9,7 @@ import com.tanalytics.auth.repository.UserSiteRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -40,5 +41,17 @@ public class InternalAuthService {
         return userSiteRepository.findById(new UserSite.UserSiteId(userId, siteId))
                 .map(us -> new InternalMembershipResponse(userId, siteId, true, us.getRole()))
                 .orElseGet(() -> new InternalMembershipResponse(userId, siteId, false, null));
+    }
+
+    @Transactional(readOnly = true)
+    public List<InternalSiteConfigResponse> getAllSiteConfigs() {
+        return siteRepository.findAll().stream()
+                .map(site -> new InternalSiteConfigResponse(
+                        site.getId(),
+                        site.getRetentionDays(),
+                        site.getRateLimitRps(),
+                        site.getSettings()
+                ))
+                .toList();
     }
 }
