@@ -43,6 +43,9 @@ public class JwtService {
 
     public String generateAccessToken(UUID userId, String email, String role, List<UUID> siteIds) {
         return Jwts.builder()
+                    .header()
+                        .add("kid", "dashboard-users")
+                        .and()
                 .subject(userId.toString())
                 .claim("email", email)
                 .claim("role", role)
@@ -56,6 +59,9 @@ public class JwtService {
 
     public String generateRefreshToken(UUID userId) {
         return Jwts.builder()
+                    .header()
+                        .add("kid", "dashboard-users")
+                        .and()
                 .subject(userId.toString())
                 .claim("type", "refresh")
                 .id(UUID.randomUUID().toString())

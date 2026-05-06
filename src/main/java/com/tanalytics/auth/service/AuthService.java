@@ -27,7 +27,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final SiteRepository siteRepository;
     private final JwtService jwtService;
-        private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenService refreshTokenService;  
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
