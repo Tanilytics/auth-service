@@ -5,6 +5,14 @@ spring:
   application:
     name: auth-service
 
+  # CORS
+  web:
+    cors:
+      allowed-origins: "*"
+      allowed-methods: "*"
+      allowed-headers: "*"
+      max-age: 3600
+
   # PostgreSQL
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/analytics}
