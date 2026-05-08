@@ -1,6 +1,7 @@
 package com.tanalytics.auth.repository;
 
 import com.tanalytics.auth.model.Site;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,5 +23,19 @@ public interface SiteRepository extends JpaRepository<Site, UUID> {
             WHERE us.user.id = :userId
             """)
     List<Site> findAllByUserId(@Param("userId") UUID userId);
+
+    @Query("""
+            SELECT s FROM Site s
+            WHERE s.name = :name
+            """
+    )
+    Optional<Object> findByName(@NotBlank String name);
+
+    @Query("""
+            SELECT s FROM Site s
+            WHERE s.domain = :domain
+            """
+    )
+    Optional<Site> findByDomain(@Param("domain") String domain);
 }
 

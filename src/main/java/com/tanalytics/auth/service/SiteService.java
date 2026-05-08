@@ -58,6 +58,13 @@ public class SiteService {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + ownerId));
 
+        if (siteRepository.findByName(request.name()).isPresent()) {
+            throw new IllegalArgumentException("Site name already exists: " + request.name());
+        }
+        if (siteRepository.findByDomain(request.domain()).isPresent()) {
+            throw new IllegalArgumentException("Site domain already exists: " + request.domain());
+        }
+
         String plainKey = apiKeyService.generateApiKey();
         String keyHash  = apiKeyService.hashApiKey(plainKey);
 
