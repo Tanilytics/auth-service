@@ -12,6 +12,7 @@ spring:
       allowed-methods: "*"
       allowed-headers: "*"
       max-age: 3600
+      allow-credentials: true
 
   # PostgreSQL
   datasource:
